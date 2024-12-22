@@ -34,7 +34,7 @@ def plot_signals(input_signal, output_signal, sampling_rate=16000):
 
     
 # Paths to PCM files
-datapath = "CCS_StartFiles/CCS_StartFiles/Assignment_2/data/"
+datapath = "CCS_StartFiles/Assignment_2/data/"
 input_pcm_path = datapath+"input.pcm"
 output_pcm_path = datapath+ "output.pcm"
 
