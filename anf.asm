@@ -15,8 +15,8 @@
 
 ; Functions callable from C code
 
-	.sect	".text"
-	.global	_anf
+;;	.sect	".text"
+;;	.global	_anf
 
 ;*******************************************************************************
 ;* FUNCTION DEFINITION: _anf_asm		                                       *
@@ -29,24 +29,24 @@
 ;		 );						=> ?
 ;
 
-_anf:
+;;_anf:
 
-		PSH  mmap(ST0_55)	; Store original status register values on stack
-		PSH  mmap(ST1_55)
-		PSH  mmap(ST2_55)
+;;		PSH  mmap(ST0_55)	; Store original status register values on stack
+;;		PSH  mmap(ST1_55)
+;;		PSH  mmap(ST2_55)
 
-		mov   #0,mmap(ST0_55)      		; Clear all fields (OVx, C, TCx)
-		or    #4100h, mmap(ST1_55)  	; Set CPL (bit 14), SXMD (bit 8);
-		and   #07940h, mmap(ST1_55)     ; Clear BRAF, M40, SATD, C16, 54CM, ASM
-		bclr  ARMS                      ; Disable ARMS bit 15 in ST2_55
+;;		mov   #0,mmap(ST0_55)      		; Clear all fields (OVx, C, TCx)
+;;		or    #4100h, mmap(ST1_55)  	; Set CPL (bit 14), SXMD (bit 8);
+;;		and   #07940h, mmap(ST1_55)     ; Clear BRAF, M40, SATD, C16, 54CM, ASM
+;;		bclr  ARMS                      ; Disable ARMS bit 15 in ST2_55
 
 		; add your implementation here
 
-		POP mmap(ST2_55)				; Restore status registers
-		POP	mmap(ST1_55)
-		POP	mmap(ST0_55)
+;;		POP mmap(ST2_55)				; Restore status registers
+;;		POP	mmap(ST1_55)
+;;		POP	mmap(ST0_55)
                                
-		RET								; Exit function call
+;;		RET								; Exit function call
     
 
 ;*******************************************************************************

@@ -18,25 +18,26 @@ int anf(int y, int *s, int *a, int *rho, unsigned int* index)
 
     // STEP 1: s[k] = y + (rho * a * s[k-1] - rho^2 * s[k-2]) >> 1
 
-	s[k] = y >> 1;	                                    // get current sample into data buffer in Q14
+	s[k] = y >> 1;	                                    // get current sample into data buffer in Q14. 15-14 = 1
 
-	AC0 = (long)rho[0] * (*a) * s[(k - 1 + 3) % 3];     // rho * a * s[k-1] in Q15 * Q14 * Q14 = Q43.
-	AC0 = AC0 >> 29;                                    // Scale back to Q14. 43-14 = 29
+	AC0 = (long)rho[0] * (*a) * s[(k - 1 + 3) % 3];     // rho * a * s[k-1] in Q15 * Q13 * Q14 = Q42.
+	AC0 = AC0 >> 28;                                    // Scale back to Q14. 42-14 = 28
 
 	AC1 = (long)rho[1] * s[(k - 2 + 3) % 3];            // rho^2 * s_prev2 in Q15 * Q14 = Q29.
 	AC1 = AC1 >> 15;                                    // Scale back to Q14. 29-14 = 15
 
-	s[k] = s[k] + ((int)AC0 - (int)AC1);                // update s[k] in Q14.
+	AC0 = AC0 - AC1;
+	s[k] = s[k] + (int)AC0;                // update s[k] in Q14.
 
-	//STEP 2: e = s[k] - ((a * s[k-1]) >> 1) + s[k-2]
-	AC0 = (long)(*a) * s[(k - 1 + 3) % 3];              // a * s[k-1] in Q14 * Q14 = Q28.
-	AC0 = AC0 >> 14;                                    // Scale back to Q14. 27-14=14
+	//STEP 2: e = s[k] - (a * s[k-1]) + s[k-2])
+	AC0 = (long)(*a) * s[(k - 1 + 3) % 3];              // a * s[k-1] in Q13 * Q14 = Q27.
+	AC0 = AC0 >> 13;                                    // Scale back to Q14. 27-14=13
 
 	e = s[k] - (int)AC0 + s[(k - 2 + 3) % 3];           // update e in Q14.
 
 	
-	//STEP 3: a = a + ((2 * mu * s[k_prev1] * e) >> 1)
-	AC1 = (long)s[(k - 1 + 3) % 3] * e * mu;            // s[k-1] * e * mu in Q14 * Q14 * Q15 = Q43.
+	//STEP 3: a = a + (2 * mu * s[k_prev1] * e)
+	AC1 = (long)s[(k - 1 + 3) % 3] * e * mu * 2;        // s[k-1] * e * mu in Q14 * Q14 * Q15 = Q43.
 	AC1 = AC1 >> 30;                                    // Scale to Q13. 43-13 = 30
 	// Check stability bounds (|a| < 2 in Q13)
     if (AC1 > (1 << 13) - 1) {
@@ -46,12 +47,10 @@ int anf(int y, int *s, int *a, int *rho, unsigned int* index)
         AC1 = -(1 << 13);                               // Clamp to maximum negative value in Q13
     }
 
-    AC1 = AC1 << 1;                                     // Scale back to Q14 (even if it really is still Q13)
-
     *a += (int)AC1;
 
     // STEP 4: Update and return
-    *index = (k + 1) % 3;
+    *index = (k + 1)%3;
 
     return e;
 
