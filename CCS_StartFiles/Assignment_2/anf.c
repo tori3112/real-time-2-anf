@@ -22,23 +22,23 @@ int anf(int y, int *s, int *a, int *rho, unsigned int* index)
 
 	AC0 = (long)rho[0] * (*a);                          // rho * a in Q15 * Q13 = Q28.
 	AC0 = AC0 >> 14;                                    // Scale back to Q14. 28-14 = 14
-	AC0 = AC0 * s[(k - 1 + 3) % 3];                     // (rho * a) * s[k-1] in Q14 * Q14 = Q28
+	AC0 = AC0 * s[(k + 2) % 3];                     // (rho * a) * s[k-1] in Q14 * Q14 = Q28
 	AC0 = AC0 >> 14;                                    // Scale back to Q14. 28-14 = 14
 
-	AC1 = (long)rho[1] * s[(k - 2 + 3) % 3];            // rho^2 * s_prev2 in Q15 * Q14 = Q29.
+	AC1 = (long)rho[1] * s[(k + 1) % 3];            // rho^2 * s_prev2 in Q15 * Q14 = Q29.
 	AC1 = AC1 >> 15;                                    // Scale back to Q14. 29-14 = 15
 
 	AC0 = AC0 - AC1;
 	s[k] = s[k] + (int)AC0;                             // update s[k] in Q14.
 
 	//STEP 2: e = s[k] - (a * s[k-1]) + s[k-2])
-	AC0 = (long)(*a) * s[(k - 1 + 3) % 3];              // a * s[k-1] in Q13 * Q14 = Q27.
+	AC0 = (long)(*a) * s[(k + 2) % 3];              // a * s[k-1] in Q13 * Q14 = Q27.
 	AC0 = AC0 >> 13;                                    // Scale back to Q14. 27-14=13
 
-	e = s[k] - (int)AC0 + s[(k - 2 + 3) % 3];           // update e in Q14.
+	e = s[k] - (int)AC0 + s[(k + 1) % 3];           // update e in Q14.
 	
 	//STEP 3: a = a + (2 * mu * s[k_prev1] * e)
-	AC1 = (long)s[(k - 1 + 3) % 3] * e;                 // s[k-1] * e * mu in Q14 * Q14 = Q28
+	AC1 = (long)s[(k + 2) % 3] * e;                 // s[k-1] * e * mu in Q14 * Q14 = Q28
 	AC1 = AC1 >> 15;                                    // Scale to Q13. 28-13 = 15
 	AC1 =  AC1 * mu * 2;                                // (s[k-1] * e) * 2* mu in Q13 * Q15 = Q28
 	AC1 = AC1 >> 15;                                    // Scale to Q13. 28-13 = 15
