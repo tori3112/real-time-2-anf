@@ -22,6 +22,7 @@ def plot_signals(input_signal, output_signal, sampling_rate=16000):
     """
     # Plot results
     plt.figure()
+    #plt.plot(output_signal)
     plt.plot(input_signal)
     plt.plot(output_signal)
     plt.title('Second order ANF with fixed rho')
