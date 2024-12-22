@@ -46,7 +46,7 @@ int anf(int y, int *s, int *a, int *rho, unsigned int* index)
         AC1 = -(1 << 13);                               // Clamp to maximum negative value in Q13
     }
 
-    AC1 = AC1 >> 1;                                     // Scale back to Q14
+    AC1 = AC1 << 1;                                     // Scale back to Q14 (even if it really is still Q13)
 
     *a += (int)AC1;
 
