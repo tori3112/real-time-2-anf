@@ -59,6 +59,12 @@ plt.xlabel('Sample')
 plt.ylabel('Amplitude')
 plt.legend(['Signal', 'ANF output'])
 
+plt.figure(figsize=(6,4))
+plt.specgram(e, Fs=8000)
+plt.xlabel("Time [s]")
+plt.ylabel("Frequency [Hz]")
+plt.title("Spectrogram Before Filtering")
+
 # Plot convergence of ANF parameter
 plt.figure()
 plt.plot(a)
