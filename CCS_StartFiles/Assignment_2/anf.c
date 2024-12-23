@@ -6,7 +6,7 @@ int anf(int y, int *s, int *a, int *rho, unsigned int* index)
      y in Q15 : newly captured sample
      s in Q12 : x[3] databuffer - Hint: Reserve a sufficiently number of integer bits such that summing intermediate values does not cause overflow (so no shift is needed after summing numbers)
      a in Q13 : the adaptive coefficient
-     e in Q14 : output signal
+     e in Q15 : output signal
      rho in Q15 : fixed {rho, rho^2} or variable {rho, rho_inf} pole radius
      index : points to (t-1) sample (t current time index) in s -> circular buffer
      */
@@ -40,29 +40,28 @@ int anf(int y, int *s, int *a, int *rho, unsigned int* index)
 	AC1 = (long)s[(k + 1) % 3] << 3;                    // Scale to Q14. 12-15 = -3
 	AC0 = AC0 + AC1;                                    // Addition in Q15
 
-	e = (int)AC0;                                       // update e in Q15
+	e = (int)AC0;                                       // Update e in Q15
 
 	//STEP 3: a = a + (2 * mu * s[k-1] * e)
-	AC0 = (long)s[(k + 2) % 3] * e;                     // s[k-1] * e in Q12 * Q15 = Q27
+	AC0 = (long)s[(k + 2) % 3] * e;                     // Q12 * Q15 = Q27
 	AC0 = AC0 >> 12;                                    // Temporarily scale to Q15. 27-15 = 12
-	AC0 =  AC0 * mu;                                    // (s[k-1] * e) * 2* mu in Q15 * Q15 = Q30
+	AC0 =  AC0 * 2 * mu;                                // Q15 * Q15 = Q30
 	AC0 = AC0 >> 17;                                    // Scale to Q13. 30-13 = 17
 
 	AC1 = ((long)(*a));                                 // Load previous a
 	AC0 = AC0 + AC1;                                    // Addition in Q13
 
-
 	// Check stability bounds (|a| < 2 in Q13)
     if (AC0 > (1 << 14) - 1) {
-        AC0 = (1 << 14) - 1;                            // Clamp to maximum positive value in Q13
+        AC0 = (1 << 14) - 1;                            // Max positive value in Q13
     }
     else if (AC0 < -(1 << 14)) {
-        AC0 = -(1 << 14);                               // Clamp to maximum negative value in Q13
+        AC0 = -(1 << 14);                               // Maximum negative value in Q13
     }
 
-    *a = (int)AC0;
+    *a = (int)AC0;                                      // Update a in Q13
 
-    // STEP 4: Update and return
+    // STEP 4: Update index and return
     *index = (k + 1)%3;
 
     return e;
