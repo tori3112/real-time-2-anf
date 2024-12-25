@@ -11,7 +11,9 @@
 
 	.mmregs
 
-MU    .set 200		; Edit this value to the desired step-size
+MU    		.set 200						; Edit this value to the desired step-size
+LAMBDA		.set 19661
+MINLAMBDA	.set 13107
 
 ; Functions callable from C code
 
@@ -26,7 +28,7 @@ MU    .set 200		; Edit this value to the desired step-size
 ;		  int *a,					=> AR1
 ; 		  int *rho,					=> AR2
 ;	      unsigned int* index		=> AR3
-;		 );							=> T1
+;		 );							=> T0
 ;
 
 _anf:
@@ -49,8 +51,26 @@ _anf:
 
 		mov *AR3, AR0					; Set current value of the buffer to the content at index
 
+; STEP 2: rho = lambda * rho(k-1) + rho(inf) * (1-lambda)
+;********************************************************************************
+		mov *AR2+<<#16, AC0				; load rho into HI(AC0), AR2 now points to rho(inf)
+		mov *AR2-<<#16, AC1				; load rho(inf) into HI(AC1), AR2 now points to rho
 
-; STEP 2: s[k] = y + (rho * a * s[k-1]) - (rho^2 * s[k-2])
+		mpyk LAMBDA, AC0				; lambda * rho(k-1) in AC0 (Q15 * Q15 = Q30)
+
+		mpyk MINLAMBDA, AC1				; rho(inf) * (1-lambda) in AC1 (Q15 * Q15 = Q30), AR2 now points to rho
+
+		add AC1, AC0					; AC0 + AC1 = lambda * rho(k-1) + rho(inf) * (1-lambda) in AC0
+		sfts AC0, #-15					; shift AC0 right by 15 to Q15 in LO
+		mov AC0, *AR2				; load rho into AR2
+
+		sqrm *AR2, AC0					; rho * rho in AC0 (Q15 * Q15 = Q30)
+		sfts AC0, #-15					; shift AC0 left by 1 to Q15 in HI
+		mov AC0, T1					; load rho^2 into T1
+
+
+
+; STEP 3: s[k] = y + (rho * a * s[k-1]) - (rho^2 * s[k-2])
 ;********************************************************************************
 		mov *AR0+, T2					; load s[k] into T2 (s[k]), AR0 now points to s[k-2]
 		mov *AR0+<<#16, AC1				; load s[k-2] into HI(AC1), AR0 now points to s[k-1]
@@ -60,7 +80,7 @@ _anf:
 		sfts AC0, #3					; shift AC0 left by 3 to Q12 in HI
 		mpym *AR2, AC0	 				; (a * s[k-1]) * rho in AC0 (Q12 * Q15 = Q27)
 
-		mpym *+AR2, AC1 				; inc pointer to rho^2, rho^2 * s[k-2] in AC1 (Q15 * Q12 = Q27)
+		mpy T1, AC1		 				; rho^2 * s[k-2] in AC1 (Q15 * Q12 = Q27)
 		sub AC1, AC0 					; AC0 - AC1 = (rho * a * s[k-1]) - (rho^2 * s[k-2]) in AC0
 		sfts AC0, #1					; shift AC0 left by 1 to Q12 in HI
 
@@ -74,7 +94,7 @@ _anf:
 		mov T0, *AR0					; load T0 (s[k]) into buffer
 
 
-; STEP 3: e = s[k] - (a * s[k-1]) + s[k-2]
+; STEP 4: e = s[k] - (a * s[k-1]) + s[k-2]
 ;********************************************************************************
 		mov *AR0+<<#19, AC1				; load s[k] into HI(AC1) in Q15, AR0 now points to s[k-2]
 		mov *AR0+<<#19, AC2				; load s[k-2] into HI(AC2) in Q15, AR0 now points at s[k-1]
@@ -89,7 +109,7 @@ _anf:
 		; AR0 still points at s[k-1]
 
 
-; STEP 4: a = a + (2 * mu * s[k-1] * e)
+; STEP 5: a = a + (2 * mu * s[k-1] * e)
 ;********************************************************************************
 		mov *AR0-<<#16, AC0				; load s[k-1] into HI(AC0), AR0 now points to s[k-2]
 		mpyk MU, AC0					; s[k-1] * mu in AC0 (Q12 * Q15 = Q27)--> HI(AC0): Q11
@@ -121,7 +141,7 @@ finish:
 		mov AC0, *AR1					; load a into AR1
 
 
-; STEP 5: Update index
+; STEP 6: Update index
 ;********************************************************************************
 
 		; AR0 is pointing at s[k-2]
