@@ -54,24 +54,24 @@ _anf:
 		mov *AR0+, T2					; load s[0] into T2 (s[k]), AR0 now points to s[1]
 		mov *AR0+<<#16, AC1				; load s[1] into high part of AC1 (s[k-2]), AR0 now points to s[2]
 		mov *AR0<<#16, AC0				; load s[2] into high part of AC0 (long)
-		mpym *AR1, AC0					; multiply s[2] with a and store product in AC0 (Q13 * Q12 = Q26) --> HI(AC0): 25-16=9
+		mpym *AR1, AC0					; multiply s[2] with a and store product in AC0 (Q12 * Q13 = Q25) --> HI(AC0): 25-16=9
 
 		;sfts AC0, #-14					; shifts contents of AC0 by 14 bits to the right, back to Q12
 		mpym *AR2+, AC0	 				; multiply HI(AC0) with rho and store product in AC0 (Q9 * Q15 = Q24), increment pointer to rho squared
-		sfts AC0, #-12					; shifts contents of AC0 by 12 bits to the right, back to Q12
+		sfts AC0, #4					; shifts contents of AC0 by 12 bits to the right, back to Q12 (or 4 to the left for hi)
 
 		mpym *AR2, AC1 					; dereference rho squared value,
 											; increment pointer to point to s[1], dereference that value
 											; multiply s[1] with rho squared and store product in AC1
 											; this is Q15 * Q12 = Q27
-		sfts AC1, #-15					; shifts contents of AC1 by 15 bits to the right, back to Q12
+		sfts AC1, #1					; shifts contents of AC1 by 15 bits to the right, back to Q12 (or 1 to the left for hi)
 		sub AC1, AC0 					; AC0 - AC1 = (rho * a * s[k-1]) - (rho^2 * s[k-2]), dst = AC0
 		mov T0, AC1
-		sfts AC1, #-3					; shift y 3 bits to the right so that it is in Q12
+		sfts AC1, #13					; shift y so that it is in Q12 in LSB (3 right for lo, 13 left for hi)
 		add AC1, AC0 					; add y shifted to Q12 to AC0
 											; now we would want to shift contents of s, it's a circular buffer
 											; remember AR0 points now to s[2]
-		mov AC0, T0					; T0 now contains s[k]
+		mov HI(AC0), T0						; T0 now contains s[k]
 
 		;AR0 is pointing at s[k-1] (after update will be s[k-2])
 		mov T2, *+AR0					; increment AR0 and move previous s[k] into now s[k-1]
@@ -126,7 +126,7 @@ finish:
 
 
 ; STEP 5: Update index
-		;mov *AR0+, T3
+		mov *AR0+, T3
 		mov AR0, *AR3
 
 ;; Wrapping up
