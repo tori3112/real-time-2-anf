@@ -28,11 +28,11 @@ int main( void )
 
 	int s[3] = {0,0,0};
 	int a[1] = {8192};
-	int rho[2] = {26214,20927}; // rho fixed {rho=?, rho^2}
-	// int rho[2] = {0, 0}; // rho adaptive {rho=?, rho_inf}
+	//int rho[2] = {26214,20927}; // rho fixed {rho=?, rho^2}
+	int rho[2] = {0, 26214}; // rho adaptive {rho=?, rho_inf}
 
 	fpIn = fopen("..\\data\\input.pcm", "rb");
-	fpOut = fopen("..\\data\\output_asm.pcm", "wb");
+	fpOut = fopen("..\\data\\output_c_adaptive.pcm", "wb");
 
 	if (fpIn == NULL || fpOut == NULL) {
 	    printf("Can't open input or output file. Exiting. \n");

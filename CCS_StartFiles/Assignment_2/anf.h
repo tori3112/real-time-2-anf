@@ -2,6 +2,7 @@
 #define ANF_H
 
 #define mu 2 * 100 // 2 * MU ( 2 * Step size )
+#define lambda 19661 // LAMBDA = 0.6 (Q15)
 
 int anf(int y, int *s , int *a, int *rho, unsigned int* index);
 

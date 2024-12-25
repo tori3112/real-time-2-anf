@@ -16,21 +16,32 @@ int anf(int y, int *s, int *a, int *rho, unsigned int* index)
 
     k = *index;
 
-    // STEP 1: s[k] = y + (rho * a * s[k-1]) - (rho^2 * s[k-2])
+    // STEP 1: rho = lambda * rho(k-1)+ rho(inf) * (1-lambda)
+    AC0 = ((long)rho[0]) * lambda;                      // Q15 * Q15 = Q30
+    AC1 = ((long)rho[1]) * (32768-lambda);              // Q15 * Q15 = Q30
+    AC0 = AC0 + AC1;                                         // Subtraction in Q30
+    AC0 = AC0 >> 15;                                    // Scale to Q15
+    rho[0] = (int)AC0;                                  // Update rho in Q15
+
+    AC1 = (long)rho[0] * rho[0];                        // Q15 * Q15 = Q30
+    AC1 = AC1 >> 15;                                    // Scale to Q15
+
+
+    // STEP 2: s[k] = y + (rho * a * s[k-1]) - (rho^2 * s[k-2])
 	AC0 = ((long)rho[0]) * (*a);                        // Q15 * Q13 = Q28.
 	AC0 = AC0 >> 13;                                    // Temporarily scale to Q15. 28-15 = 13
 	AC0 = AC0 * s[(k + 2) % 3];                         // Q15 * Q12 = Q27
 
-	AC1 = ((long)rho[1]) * s[(k + 1) % 3];              // Q15 * Q12 = Q27.
+	AC1 = AC1 * s[(k + 1) % 3];              // Q15 * Q12 = Q27.
 	AC0 = AC0 - AC1;                                    // Subtraction in Q27
 
 	AC1 = (long)y << 12;                                // Scale to Q27. 15-27 = -12
 	AC0 = AC0 + AC1;                                    // Addition in Q27
 
 	AC0 = AC0 >> 15;                                    // Scale back to Q12. 27-12 = 15
-	s[k] =(int)AC0;                                     // update s[k] in Q12.
+	s[k] =(int)AC0;                                     // Update s[k] in Q12.
 
-	//STEP 2: e = s[k] - (a * s[k-1]) + s[k-2]
+	//STEP 3: e = s[k] - (a * s[k-1]) + s[k-2]
 	AC1 = ((long)(*a)) * s[(k + 2) % 3];                // Q13 * Q12 = Q25.
 	AC1 = AC1 >> 10;                                    // Scale to Q15. 25-15 = 10
 
@@ -42,7 +53,7 @@ int anf(int y, int *s, int *a, int *rho, unsigned int* index)
 
 	e = (int)AC0;                                       // Update e in Q15
 
-	//STEP 3: a = a + (2 * mu * s[k-1] * e)
+	//STEP 4: a = a + (2 * mu * s[k-1] * e)
 	AC0 = (long)s[(k + 2) % 3] * e;                     // Q12 * Q15 = Q27
 	AC0 = AC0 >> 12;                                    // Temporarily scale to Q15. 27-15 = 12
 	AC0 =  AC0 * 2 * mu;                                // Q15 * Q15 = Q30
@@ -61,8 +72,8 @@ int anf(int y, int *s, int *a, int *rho, unsigned int* index)
 
     *a = (int)AC0;                                      // Update a in Q13
 
-    // STEP 4: Update index and return
-    *index = (k + 1)%3;
+    // STEP 5: Update index and return
+    *index = (k + 1)%3;                                 // Update index
 
     return e;
 
