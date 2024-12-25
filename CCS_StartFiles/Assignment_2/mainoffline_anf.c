@@ -32,7 +32,7 @@ int main( void )
 	// int rho[2] = {0, 0}; // rho adaptive {rho=?, rho_inf}
 
 	fpIn = fopen("..\\data\\input.pcm", "rb");
-	fpOut = fopen("..\\data\\output.pcm", "wb");
+	fpOut = fopen("..\\data\\output_asm.pcm", "wb");
 
 	if (fpIn == NULL || fpOut == NULL) {
 	    printf("Can't open input or output file. Exiting. \n");
