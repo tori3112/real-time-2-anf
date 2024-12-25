@@ -56,16 +56,17 @@ _anf:
 		mov *AR0+<<#16, AC0				; load s[2] into high part of AC0 (long)
 		mpym *AR1, AC0					; multiply s[2] with a and store product in AC0 (Q12 * Q13 = Q25) --> HI(AC0): 25-16=9
 
-		;sfts AC0, #-14					; shifts contents of AC0 by 14 bits to the right, back to Q12
-		mpym *AR2, AC0	 				; multiply HI(AC0) with rho and store product in AC0 (Q9 * Q15 = Q24), increment pointer to rho squared
-		sfts AC0, #4					; shifts contents of AC0 by 12 bits to the right, back to Q12 (or 4 to the left for hi)
+		sfts AC0, #3					; shifts contents of AC0 by 3 bits to the left, back to Q12
+		mpym *AR2, AC0	 				; multiply HI(AC0) with rho and store product in AC0 (Q12 * Q15 = Q27), increment pointer to rho squared
+		;sfts AC0, #4					; shifts contents of AC0 by 12 bits to the right, back to Q12 (or 4 to the left for hi)
 
 		mpym *+AR2, AC1 					; dereference rho squared value,
 											; increment pointer to point to s[1], dereference that value
 											; multiply s[1] with rho squared and store product in AC1
 											; this is Q15 * Q12 = Q27
-		sfts AC1, #1					; shifts contents of AC1 by 15 bits to the right, back to Q12 (or 1 to the left for hi)
+		;sfts AC1, #1					; shifts contents of AC1 by 15 bits to the right, back to Q12 (or 1 to the left for hi)
 		sub AC1, AC0 					; AC0 - AC1 = (rho * a * s[k-1]) - (rho^2 * s[k-2]), dst = AC0
+		sfts AC0, #1
 		mov T0, AC1
 		sfts AC1, #13					; shift y so that it is in Q12 in LSB (3 right for lo, 13 left for hi)
 		add AC1, AC0 					; add y shifted to Q12 to AC0
@@ -102,7 +103,7 @@ _anf:
 		mov *AR0-<<#16, AC0				; store s[k-1] in HI(AC0), AR0 now points to s[k]
 		mpyk MU, AC0					; multiply s[k-1] with mu and store product in AC0 (Q12)
 		mpy T0, AC0		 				; multiply AC0 with e, store product in AC0 (Q12 * Q15 = Q27, MSB: 27-16 = Q11)
-		sfts AC0, #-15					; shifts contents of AC0 by 14 bits to the right to LSB Q13 plus multiply by two is 1 bit shift left
+		sfts AC0, #-14					; shifts contents of AC0 by 14 bits to the right to LSB Q13 plus multiply by two is 1 bit shift left
 		;mov *AR1<<#16, AC1				; load a into HI(AC1)
 		add *AR1, AC0					; add a to AC0, Q13 + Q13 = Q13 in HI(AC1)
 		;;CHECK BOUNDARIES
