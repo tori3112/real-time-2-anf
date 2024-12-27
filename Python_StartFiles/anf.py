@@ -4,6 +4,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import soundfile as sf
 
 
 write_to_file_flag = True  # Flag to write input signal to file
@@ -11,22 +12,27 @@ write_to_file_flag = True  # Flag to write input signal to file
 ##############################################################################
 # Input signal creation
 ##############################################################################
-fs = 8000  # Sampling frequency
-freqs = [400, 1200]  # Frequencies to filter out
+# fs = 8000  # Sampling frequency
+# freqs = [1000, 1600]  # Frequencies to filter out
 
-t = np.arange(0, fs) / fs  # Time vector
-amplitude = 0.5  # Amplitude of input signal
+# t = np.arange(0, fs) / fs  # Time vector
+# amplitude = 0.5  # Amplitude of input signal
 
-# Create input signal
-signal = amplitude * np.concatenate(
-    ((np.sin(2 * np.pi * freqs[0] * t), np.sin(2 * np.pi * freqs[1] * t))))
+# # Create input signal
+# signal = amplitude * np.concatenate(
+#     ((np.sin(2 * np.pi * freqs[0] * t), np.sin(2 * np.pi * freqs[1] * t))))
 
-N = len(signal)  # Number of samples in signal
+# N = len(signal)  # Number of samples in signal
 
-# Add noise to input signal
-stdev = 0.05
-noise = np.random.normal(0, stdev, N)  # Noise vector
-signal = signal + noise  # Noisy signal
+# # Add noise to input signal
+# stdev = 0.05
+# noise = np.random.normal(0, stdev, N)  # Noise vector
+# signal = signal + noise  # Noisy signal
+
+audio_file = "audio/rain.wav"
+audio_data, fs = sf.read(audio_file)
+signal = 0.5*audio_data[:, 0] #select the left channel
+N = len(signal) #number of samples in signal
 
 ##############################################################################
 # Simulation of adaptive notch filter (ANF) with fixed rho
@@ -60,10 +66,16 @@ plt.ylabel('Amplitude')
 plt.legend(['Signal', 'ANF output'])
 
 plt.figure(figsize=(6,4))
+plt.specgram(signal, Fs=8000)
+plt.xlabel("Time [s]")
+plt.ylabel("Frequency [Hz]")
+plt.title("Spectrogram before Filtering")
+
+plt.figure(figsize=(6,4))
 plt.specgram(e, Fs=8000)
 plt.xlabel("Time [s]")
 plt.ylabel("Frequency [Hz]")
-plt.title("Spectrogram Before Filtering")
+plt.title("Spectrogram after Filtering")
 
 # Plot convergence of ANF parameter
 plt.figure()
@@ -80,5 +92,5 @@ if write_to_file_flag:
     import file_parser as fp
     q_factor = 15
     signal_q = np.round(signal * (2 ** q_factor)).astype(np.int16)
-    datapath = 'input.pcm'
+    datapath = '../CCS_StartFiles/Assignment_2/data/rain.pcm'
     fp.writes(signal_q, datapath)
