@@ -11,7 +11,7 @@
 
 	.mmregs
 
-MU    		.set 200						; Edit this value to the desired step-size
+MU    		.set 200			; Edit this value to the desired step-size
 LAMBDA		.set 19661
 MINLAMBDA	.set 13107
 
@@ -23,21 +23,21 @@ MINLAMBDA	.set 13107
 ;*******************************************************************************
 ;* FUNCTION DEFINITION: _anf_asm		                                       *
 ;*******************************************************************************
-; int anf(int y,					=> T0
+; int anf(int y,						=> T0
 ;		  int *s,					=> AR0
 ;		  int *a,					=> AR1
 ; 		  int *rho,					=> AR2
-;	      unsigned int* index		=> AR3
-;		 );							=> T0
+;	      unsigned int* index				=> AR3
+;		 );						=> T0
 ;
 
 _anf:
 ; Initialize
-		PSH  mmap(ST0_55)				; Store original status register values on stack
+		PSH  mmap(ST0_55)		; Store original status register values on stack
 		PSH  mmap(ST1_55)
 		PSH  mmap(ST2_55)
 
-		mov   #0,mmap(ST0_55)      		; Clear all fields (OVx, C, TCx)
+		mov   #0,mmap(ST0_55)      	; Clear all fields (OVx, C, TCx)
 		or    #4100h, mmap(ST1_55)  	; Set CPL (bit 14), SXMD (bit 8);
 		and   #07940h, mmap(ST1_55)     ; Clear BRAF, M40, SATD, C16, 54CM, ASM
 		bclr  ARMS                      ; Disable ARMS bit 15 in ST2_55
@@ -45,9 +45,9 @@ _anf:
 
 ; STEP 1: Setup
 ;********************************************************************************
-		bset AR0LC						; Set AR0 as circular buffer
+		bset AR0LC					; Set AR0 as circular buffer
 		mov #3, BK03					; Set size of circular buffer to 3
-		mov mmap(AR0), BSA01			; Set base address of circular buffer to address of register
+		mov mmap(AR0), BSA01				; Set base address of circular buffer to address of register
 
 		mov *AR3, AR0					; Set current value of the buffer to the content at index
 
@@ -62,7 +62,7 @@ _anf:
 
 		add AC1, AC0					; AC0 + AC1 = lambda * rho(k-1) + rho(inf) * (1-lambda) in AC0
 		sfts AC0, #-15					; shift AC0 right by 15 to Q15 in LO
-		mov AC0, *AR2				; load rho into AR2
+		mov AC0, *AR2					; load rho into AR2
 
 		sqrm *AR2, AC0					; rho * rho in AC0 (Q15 * Q15 = Q30)
 		sfts AC0, #-15					; shift AC0 left by 1 to Q15 in HI
@@ -80,11 +80,11 @@ _anf:
 		sfts AC0, #3					; shift AC0 left by 3 to Q12 in HI
 		mpym *AR2, AC0	 				; (a * s[k-1]) * rho in AC0 (Q12 * Q15 = Q27)
 
-		mpy T1, AC1		 				; rho^2 * s[k-2] in AC1 (Q15 * Q12 = Q27)
+		mpy T1, AC1		 			; rho^2 * s[k-2] in AC1 (Q15 * Q12 = Q27)
 		sub AC1, AC0 					; AC0 - AC1 = (rho * a * s[k-1]) - (rho^2 * s[k-2]) in AC0
 		sfts AC0, #1					; shift AC0 left by 1 to Q12 in HI
 
-		mov T0, AC1						; load y into AC1
+		mov T0, AC1					; load y into AC1
 		sfts AC1, #13					; shift AC1 left by 13 to Q12 in HI
 		add AC1, AC0 					; AC0 + AC1 = y + ((rho * a * s[k-1]) - (rho^2 * s[k-2])) in AC0
 
@@ -113,28 +113,28 @@ _anf:
 ;********************************************************************************
 		mov *AR0-<<#16, AC0				; load s[k-1] into HI(AC0), AR0 now points to s[k-2]
 		mpyk MU, AC0					; s[k-1] * mu in AC0 (Q12 * Q15 = Q27)--> HI(AC0): Q11
-		mpy T0, AC0		 				; (s[k-1] * mu) * e in AC0 (Q11 * Q15 = Q26)
+		mpy T0, AC0		 			; (s[k-1] * mu) * e in AC0 (Q11 * Q15 = Q26)
 		sfts AC0, #-12					; shift AC0 right by 13 to Q13 in LO + shift left by 1 to multiply by 2
 
 		add *AR1, AC0					; add a to (2 * mu * s[k-1] * e) in AC0 (Q13)
 
 		;;CHECK BOUNDARIES;;
-		mov #1, AC1						; load 1 into LO(AC1)
+		mov #1, AC1					; load 1 into LO(AC1)
 		sfts AC1, #14					; shift AC1 left by 14 to represent 2 in Q13
-		sub #1, AC1						; subtract 1 to get max value
+		sub #1, AC1					; subtract 1 to get max value
 
 		cmp AC0 > AC1, TC1				; check if AC0 exceeds maximum positive value
 		bcc a_max, TC1					; go to branch a_max if true
 
-		neg AC1							; 2s complement of AC1 (negative)
+		neg AC1						; 2s complement of AC1 (negative)
 		cmp AC0 < AC1, TC1				; check if AC0 exceeds maximum negative value
 		bcc a_max, TC1					; go to branch a_max if AC0 true
 
-		b finish						; go to finish branch
+		b finish					; go to finish branch
 
 a_max:
 		mov AC1, AC0					; clamp a value to (+/- 1<<14)
-		b finish						; go to finish branch
+		b finish					; go to finish branch
 
 		;;UPDATE ADAPTIVE COEFFICIENT;;
 finish:
