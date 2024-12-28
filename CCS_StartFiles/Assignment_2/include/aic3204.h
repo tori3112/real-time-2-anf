@@ -55,11 +55,11 @@
 
  extern void aic3204_init(void);
  extern void aic3204_hardware_init(void);
- extern void aic3204_codec_read(Int16* left_input, Int16* right_input);
- extern void aic3204_codec_write(Int16 left_input, Int16 right_input);
+ extern void aic3204_codec_read(short* left_input, short* right_input);
+ extern void aic3204_codec_write(short left_input, short right_input);
  extern void aic3204_disable(void);
 
- extern Int16 AIC3204_rset( Uint16 regnum, Uint16 regval);
+ extern short AIC3204_rset( unsigned short regnum, unsigned short regval);
 
 
  extern unsigned long set_sampling_frequency_and_gain(unsigned long SamplingFrequency, unsigned int ADCgain);
