@@ -18,7 +18,7 @@ int anf(int y, int *s, int *a, int *rho, unsigned int* index)
 
     // STEP 1: rho = lambda * rho(k-1)+ rho(inf) * (1-lambda)
     AC0 = ((long)rho[0]) * lambda;                      // Q15 * Q15 = Q30
-    AC1 = ((long)rho[1]) * (32768-lambda);              // Q15 * Q15 = Q30
+    AC1 = ((long)rho[1]) * minlambda;              // Q15 * Q15 = Q30
     AC0 = AC0 + AC1;                                    // Subtraction in Q30
     AC0 = AC0 >> 15;                                    // Scale to Q15
     rho[0] = (int)AC0;                                  // Update rho in Q15

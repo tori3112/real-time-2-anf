@@ -119,9 +119,9 @@ _anf:
 		add *AR1, AC0					; add a to (2 * mu * s[k-1] * e) in AC0 (Q13)
 
 		;;CHECK BOUNDARIES;;
-		mov #1, AC1					; load 1 into LO(AC1)
-		sfts AC1, #14					; shift AC1 left by 14 to represent 2 in Q13
-		sub #1, AC1					; subtract 1 to get max value
+		mov #32767, AC1					; load 2 in Q13 into LO(AC1)
+		;sfts AC1, #14					; shift AC1 left by 14 to represent 2 in Q13
+		;sub #1, AC1					; subtract 1 to get max value
 
 		cmp AC0 > AC1, TC1				; check if AC0 exceeds maximum positive value
 		bcc a_max, TC1					; go to branch a_max if true

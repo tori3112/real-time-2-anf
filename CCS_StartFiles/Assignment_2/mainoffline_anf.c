@@ -31,8 +31,8 @@ int main( void )
 	//int rho[2] = {26214,20927}; // rho fixed {rho=?, rho^2}
 	int rho[2] = {0, 26214}; // rho adaptive {rho=?, rho_inf}
 
-	fpIn = fopen("..\\data\\NoisyVoice.pcm", "rb");
-	fpOut = fopen("..\\data\\NoisyVoice_output_asm.pcm", "wb");
+	fpIn = fopen("..\\data\\fridge-buzz.pcm", "rb");
+	fpOut = fopen("..\\data\\fridge-buzz_trash.pcm", "wb");
 
 	if (fpIn == NULL || fpOut == NULL) {
 	    printf("Can't open input or output file. Exiting. \n");
